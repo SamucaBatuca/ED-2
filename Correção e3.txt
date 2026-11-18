@@ -1,0 +1,65 @@
+/* a3_quebrado.c — EXERCICIO A3
+ * Estruturas de Dados II (CMP2109) — Encontro 04
+ *
+ * OBJETIVO
+ *   As quatro funcoes abaixo compilam, mas todas estao erradas: umas nao
+ *   terminam, outras devolvem valor incorreto.
+ *
+ *   Para CADA uma, aplique as tres perguntas do slide 4:
+ *     1. Existe caso base?
+ *     2. O caso base e alcancavel?
+ *     3. O problema realmente encolhe a cada chamada?
+ *
+ *   Escreva o diagnostico em relatorio.txt e corrija a funcao.
+ *
+ * ATENCAO: main() esta com as chamadas comentadas de proposito, porque
+ *          algumas funcoes travam o programa. Descomente uma de cada vez.
+ *
+ * COMPILAR  gcc -std=c11 -Wall -Wextra -g a3_quebrado.c -o a3
+ */
+#include <stdio.h>
+
+/* Deveria contar de n ate 0. */
+static void conta_regressiva(int n)
+{
+    printf("%d ", n);
+    if (n == 0) return;		// agora para em 0
+    conta_regressiva(n - 1);		
+}
+
+/* Deveria devolver n! para n >= 0. */
+static long fat(int n)
+{
+    if (n == 0)			// agora reconhece 0
+        return 1;
+    return n * fat(n - 1);
+}
+
+/* Deveria devolver a soma de 1 ate n. */
+static long soma_ate(long n)
+{
+    if (n <= 0)
+        return 0;
+    return n + soma_ate(n-1); 		// decresce o n
+}
+
+/* Deveria devolver o comprimento da string. */
+static size_t comprimento(const char *s)
+{
+    if (*s == '\0')
+        return 0;
+    return 1 + comprimento(s + 1);		// agora avança ponteiro
+}
+
+int main(void)
+{
+    conta_regressiva(5); putchar('\n');
+    printf("fat(0)  = %ld  (esperado 1)\n",   fat(0));  
+    printf("fat(5)  = %ld  (esperado 120)\n", fat(5)); 
+    printf("soma_ate(100) = %ld  (esperado 5050)\n", soma_ate(100));
+    printf("comprimento(\"abc\") = %zu  (esperado 3)\n", comprimento("abc"));
+
+    puts("Descomente uma chamada de cada vez.");
+    (void) conta_regressiva; (void) fat; (void) soma_ate; (void) comprimento;
+    return 0;
+}

@@ -1,0 +1,76 @@
+Experimento de compilação e correção com Valgrind:
+
+Ao compilar, ele retornou as seguintes mensagens:
+
+---------------------------------------------------------------------------------------
+aula3_e2_defeituoso.c: In function ‘soma_e_libera’:
+aula3_e2_defeituoso.c:44:17: warning: pointer ‘v’ used after ‘free’ [-Wuse-after-free]
+   44 |     return s + v[0];                          /* <-- defeito B */
+      |                ~^~~
+aula3_e2_defeituoso.c:43:5: note: call to ‘free’ here
+   43 |     free(v);
+      |     ^~~~~~~
+----------------------------------------------------------------------------------------
+
+Sendo assim, ele está sugerindo que na linha 44 do código há uma utilização de um ponteiro
+anteriormente liberado, fazendo com que o código acesse memória corrompida. Este é o defeito B.
+
+
+Quando executamos, ele exibe uma mensagem de "Invalid write of size 4", o que significa que houve
+a tentativa de acesso de um espaço maior de 4bytes que não estava previamente alocado. Este é o 
+erro A, que, segundo o relatório, ocorre na linha 33 do código.
+
+O código corrigido segue assim:
+
+--------------------------------------------------------------------
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* Devolve um vetor com o dobro de cada elemento de v. */
+static int *dobra(const int *v, size_t n)
+{
+    int *saida = malloc(n * sizeof *saida);
+    if (saida == NULL) return NULL;
+    for (size_t i = 0; i < n; i++)          // correção A: "i<n"
+        saida[i] = 2 * v[i];
+    return saida;
+}
+
+/* Soma os valores de um vetor e o libera. */
+static int soma_e_libera(int *v, size_t n)
+{
+    int s = 0;
+    for (size_t i = 0; i < n; i++)
+        s += v[i];
+    free(v);                                   // correção B: free(v) antes do return
+    return s;
+}
+
+int main(void)
+{
+    int base[5] = {1, 2, 3, 4, 5};
+
+    int *d = dobra(base, 5);
+    if (d == NULL) return 1;
+
+    printf("dobro:");
+    for (size_t i = 0; i < 5; i++)
+        printf(" %d", d[i]);
+    putchar('\n');
+
+    char *rotulo = malloc(32);
+    if (rotulo == NULL) { free(d); return 1; }
+    strcpy(rotulo, "vetor de rotulos");
+
+    int *copia = malloc(5 * sizeof *copia);
+    if (copia == NULL) { free(d); free(rotulo); return 1; }
+    memcpy(copia, base, 5 * sizeof *copia);
+
+    printf("soma dos rotulos: %d\n", soma_e_libera(copia, 5));
+
+    free(d);
+    free(rotulo);                              // correção C: liberar 'rotulo'
+    return 0;
+}
+
